@@ -1,0 +1,12 @@
+from career_pilot.prompts.prompt_templates import (
+    CV_ANALYZER_SYSTEM,
+    CV_ANALYZER_USER,
+    JOB_MATCHER_SYSTEM,
+    JOB_MATCHER_USER,
+    SKILL_GAP_SYSTEM,
+    SKILL_GAP_USER,
+    CV_GENERATOR_SYSTEM,
+    CV_GENERATOR_USER,
+    INTERVIEW_SYSTEM,
+    INTERVIEW_USER,
+)
