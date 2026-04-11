@@ -1,23 +1,14 @@
 import gradio as gr
-from career_pilot.core.llm import CareerPilotLLM
-
-
-# Initialize LLM
-llm = CareerPilotLLM()
+from career_pilot.graph import run_graph
 
 
 def chat(message, history):
-    """Handle chat messages with intent detection."""
+    """Handle chat messages with LangGraph."""
     if not message:
         return "", history
 
-    # Add user message to history
     history.append((message, ""))
-
-    # TODO: Call orchestrator to detect intent and route to agent
-    # For now, simple echo
-    response = f"Got: {message}\n\nFeature coming soon..."
-
+    response = run_graph(message)
     history[-1] = (message, response)
     return "", history
 
@@ -32,7 +23,7 @@ I can help you with: CV analysis, job matching, skill gaps, CV generation, and m
 
 
 # Build Gradio interface
-with gr.Blocks(title="Career Pilot", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Career Pilot") as demo:
     gr.Markdown(welcome())
 
     with gr.Row():
@@ -69,4 +60,7 @@ with gr.Blocks(title="Career Pilot", theme=gr.themes.Soft()) as demo:
 
 
 if __name__ == "__main__":
+    import os
+
+    os.environ.setdefault("PYTHONPATH", "src")
     demo.launch(server_port=7860)
