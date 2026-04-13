@@ -1,7 +1,7 @@
 from typing import Literal
 from langchain_core.messages import HumanMessage, AIMessage
 from career_pilot.graph.state import AppState
-from career_pilot.agents.router import get_router
+from career_pilot.agents.router import Router
 from career_pilot.prompts.prompt_templates import (
     CV_ANALYZER_SYSTEM,
     CV_ANALYZER_USER,
@@ -16,26 +16,25 @@ from career_pilot.prompts.prompt_templates import (
 )
 from career_pilot.core.llm import CareerPilotLLM
 
-router = get_router()
+router = Router()
 llm = CareerPilotLLM(temperature=0.3)
 
 
 def router_node(state: AppState) -> dict:
     last_msg = state["messages"][-1].content
-    intent = router.route(last_msg)
-    return {"intent": intent, "context": {}}
+    result = router.route(last_msg)
+    return {"intent": result.intent, "context": result.parameters.model_dump()}
 
 
 def cv_analyzer_node(state: AppState) -> dict:
-    """Placeholder for CV analyzer node."""
     last_msg = state["messages"][-1].content
+
     prompt = CV_ANALYZER_USER.format(cv_text=last_msg, target_jd_section="")
     response = llm.invoke(CV_ANALYZER_SYSTEM + "\n\n" + prompt)
     return {"response": response.content}
 
 
 def job_matcher_node(state: AppState) -> dict:
-    """Placeholder for job matcher node."""
     last_msg = state["messages"][-1].content
     prompt = JOB_MATCHER_USER.format(cv_text=last_msg, target_role="", location="")
     response = llm.invoke(JOB_MATCHER_SYSTEM + "\n\n" + prompt)

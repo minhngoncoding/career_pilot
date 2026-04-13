@@ -4,11 +4,19 @@ from career_pilot.graph import run_graph
 
 def chat(message, history):
     """Handle chat messages with LangGraph."""
-    if not message:
+    # MultimodalTextbox returns dict: {'text': '...', 'files': [...]}
+    if isinstance(message, dict):
+        text = message.get("text", "") or ""
+        files = message.get("files", []) or []
+    else:
+        text = message or ""
+        files = []
+
+    if not text and not files:
         return "", history
 
-    response = run_graph(message)
-    history.append({"role": "user", "content": message})
+    response = run_graph(text, files=files)
+    history.append({"role": "user", "content": text})
     history.append({"role": "assistant", "content": response})
     return "", history
 
@@ -33,10 +41,19 @@ with gr.Blocks(title="Career Pilot") as demo:
                 height=500,
             )
 
-            msg = gr.Textbox(
-                label="✍️ Type your message",
-                placeholder="Type your message here...",
-                lines=3,
+            with gr.Column(scale=1):
+                msg = gr.MultimodalTextbox(
+                    label="✍️ Type your message",
+                    placeholder="Type your message here...",
+                    lines=2,
+                    file_types=[".pdf", ".docx", ".txt"],
+                    file_count="multiple",
+                    interactive=True,
+                )
+            file_input = gr.File(
+                label="📎 Upload CV",
+                file_types=[".pdf", ".docx", ".txt"],
+                visible=False,
             )
 
             with gr.Row():
@@ -55,7 +72,11 @@ with gr.Blocks(title="Career Pilot") as demo:
 
     # Event handlers
     submit_btn.click(chat, inputs=[msg, chatbot], outputs=[msg, chatbot])
-    msg.submit(chat, inputs=[msg, chatbot], outputs=[msg, chatbot])
+    msg.submit(
+        chat,
+        inputs=[msg, chatbot],
+        outputs=[msg, chatbot],
+    )
     clear_btn.click(lambda: (None, []), outputs=[msg, chatbot])
 
 

@@ -17,15 +17,22 @@ def parse_docx(file_path: str) -> str:
     return text
 
 
+def parse_txt(file_path: str) -> str:
+    """Extract text from TXT file."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def parse_resume(file_path: str) -> str:
     """Auto-detect format and parse resume."""
     if file_path.endswith(".pdf"):
         return parse_pdf(file_path)
     elif file_path.endswith(".docx"):
         return parse_docx(file_path)
+    elif file_path.endswith(".txt"):
+        return parse_txt(file_path)
     else:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return f.read()
+        raise ValueError(f"Unsupported file format: {file_path}")
 
 
 def extract_sections(text: str) -> dict:

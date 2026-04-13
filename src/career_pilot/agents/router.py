@@ -1,63 +1,62 @@
-import json
 from career_pilot.core.llm import CareerPilotLLM
 from career_pilot.prompts import ORCHESTRATOR_SYSTEM, ORCHESTRATOR_USER
+from career_pilot.agents.models import (
+    IntentDetection,
+    IntentParameters,
+    SUPPORTED_INTENTS,
+)
 
 
 class Router:
     """Intent detection and routing agent."""
 
-    SUPPORTED_INTENTS = [
-        "CV_ANALYSIS",
-        "JOB_MATCH",
-        "SKILL_GAP",
-        "CV_GENERATOR",
-        "INTERVIEW",
-        "GREETING",
-    ]
-
     def __init__(self):
-        self.llm = CareerPilotLLM(temperature=0.1)
+        self._llm = CareerPilotLLM(temperature=0.1)
 
-    def detect_intent(self, user_message: str) -> dict:
-        """Detect user intent from message."""
+    @property
+    def llm(self):
+        return self._llm.with_structured_output(IntentDetection)
+
+    def detect_intent(self, user_message: str) -> IntentDetection:
         prompt = ORCHESTRATOR_USER.format(user_message=user_message)
-
-        response = self.llm.invoke(ORCHESTRATOR_SYSTEM + "\n\n" + prompt)
-
         try:
-            content = response.content.strip()
-            if content.startswith("```json"):
-                content = content[7:]
-            if content.endswith("```"):
-                content = content[:-3]
-            result = json.loads(content.strip())
-            return result
-        except (json.JSONDecodeError, AttributeError):
+            return self.llm.invoke(ORCHESTRATOR_SYSTEM + "\n\n" + prompt)
+        except Exception:
             return self._fallback_detect(user_message)
 
-    def _fallback_detect(self, user_message: str) -> dict:
+    def _fallback_detect(self, user_message: str) -> IntentDetection:
         """Fallback keyword-based intent detection."""
         msg_lower = user_message.lower()
+        params = IntentParameters()
 
         if any(kw in msg_lower for kw in ["analyze", "check", "score", "cv", "resume"]):
-            return {"intent": "CV_ANALYSIS", "confidence": 0.8, "parameters": {}}
+            return IntentDetection(
+                intent="CV_ANALYSIS", confidence=0.8, parameters=params
+            )
         if any(kw in msg_lower for kw in ["find job", "job", "match"]):
-            return {"intent": "JOB_MATCH", "confidence": 0.8, "parameters": {}}
+            return IntentDetection(
+                intent="JOB_MATCH", confidence=0.8, parameters=params
+            )
         if any(kw in msg_lower for kw in ["skill", "gap", "learn"]):
-            return {"intent": "SKILL_GAP", "confidence": 0.8, "parameters": {}}
+            return IntentDetection(
+                intent="SKILL_GAP", confidence=0.8, parameters=params
+            )
         if any(kw in msg_lower for kw in ["generate", "create", "viết", "tạo"]):
-            return {"intent": "CV_GENERATOR", "confidence": 0.8, "parameters": {}}
+            return IntentDetection(
+                intent="CV_GENERATOR", confidence=0.8, parameters=params
+            )
         if any(kw in msg_lower for kw in ["interview", "mock", "practice"]):
-            return {"intent": "INTERVIEW", "confidence": 0.8, "parameters": {}}
+            return IntentDetection(
+                intent="INTERVIEW", confidence=0.8, parameters=params
+            )
         if any(kw in msg_lower for kw in ["hello", "hi", "help"]):
-            return {"intent": "GREETING", "confidence": 0.9, "parameters": {}}
+            return IntentDetection(intent="GREETING", confidence=0.9, parameters=params)
 
-        return {"intent": "GREETING", "confidence": 0.5, "parameters": {}}
+        return IntentDetection(intent="GREETING", confidence=0.5, parameters=params)
 
-    def route(self, user_message: str) -> str:
+    def route(self, user_message: str) -> IntentDetection:
         """Route user to appropriate agent."""
-        result = self.detect_intent(user_message)
-        return result.get("intent", "GREETING")
+        return self.detect_intent(user_message)
 
 
 def get_router() -> Router:
