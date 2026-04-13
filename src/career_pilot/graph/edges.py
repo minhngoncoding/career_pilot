@@ -23,5 +23,4 @@ def route_by_intent(
         "INTERVIEW": "interview_node",
         "GREETING": "greeting_node",
     }
-
     return intent_to_node.get(intent, "greeting_node")

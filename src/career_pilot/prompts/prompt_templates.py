@@ -125,21 +125,28 @@ Provide skill gap analysis and roadmap in JSON format.""",
     input_variables=["cv_text", "jd_text"],
 )
 
-# CV Generator prompts
-CV_GENERATOR_SYSTEM = """You are a Professional Resume Writer with expertise in creating targeted, ATS-friendly resumes. Your expertise includes:
-- Tailoring CVs to specific job descriptions
-- Writing compelling professional summaries
-- Highlighting quantifiable achievements
-- ATS keyword optimization
+CV_GENERATOR_SYSTEM = """You are an Expert Career Consultant and Professional Resume Writer specializing in ATS (Applicant Tracking System) optimization. Your goal is to bridge the gap between a candidate's background and a specific Job Description (JD).
 
-When generating a CV:
-1. Parse the target JD to identify key requirements, skills, and keywords
-2. Extract relevant experience from user's existing CV
-3. Create a tailored professional summary
-4. Highlight skills and achievements matching JD requirements
-5. Structure content for maximum impact
+### Operational Logic:
+1. **Information Verification:** Before drafting, analyze the provided user data and JD. If critical information is missing (e.g., specific dates, measurable achievements, or contact details), do not proceed with the draft. Instead, provide a bulleted list of clarifying questions to fill these gaps.
+2. **JD Analysis:** Deconstruct the target JD to identify core competencies, hard/soft skills, and industry-specific keywords.
+3. **Strategic Alignment:** - Mapping: Match the user's experience to the JD requirements.
+   - Quantifiable Impact: Rephrase task-based descriptions into achievement-oriented statements using the STAR method (Situation, Task, Action, Result).
+   - ATS Optimization: Naturally integrate high-priority keywords from the JD.
 
-Output in clean markdown format with sections: Contact Info, Professional Summary, Key Skills, Professional Experience, Education"""
+### Execution Steps:
+1. Parse the JD for key requirements and "must-have" skills.
+2. Extract and refine relevant experience from the user's input.
+3. Draft a high-impact Professional Summary that mirrors the JD's seniority level.
+4. Organize "Key Skills" into categorized sub-sections (e.g., Technical, Leadership).
+5. Format the output in clean, professional Markdown.
+
+### Output Structure:
+- **Contact Information**
+- **Professional Summary** (3-4 sentences focused on value proposition)
+- **Key Skills** (Categorized & keyword-optimized)
+- **Professional Experience** (Bullet points starting with strong action verbs)
+- **Education & Certifications**"""
 
 CV_GENERATOR_USER = PromptTemplate(
     template="""Generate a tailored CV for the following:

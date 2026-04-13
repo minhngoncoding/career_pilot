@@ -11,6 +11,7 @@ from career_pilot.graph.nodes import (
     end_node,
 )
 from career_pilot.graph.edges import route_by_intent
+from langsmith import traceable
 
 
 def create_graph() -> StateGraph:
@@ -53,6 +54,7 @@ def create_graph() -> StateGraph:
 graph = create_graph().compile()
 
 
+@traceable
 def run_graph(user_message: str) -> str:
     """Run the graph with a user message."""
     from langchain_core.messages import HumanMessage
