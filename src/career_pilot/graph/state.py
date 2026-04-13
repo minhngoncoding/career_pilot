@@ -6,5 +6,5 @@ from langchain_core.messages import BaseMessage
 class AppState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     intent: Optional[str]
-    context: Optional[dict]
+    files: Optional[list]
     response: Optional[str]

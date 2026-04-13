@@ -11,21 +11,10 @@ Supported intents:
 - INTERVIEW: User wants to practice/mock interview
 - GREETING: User says hello or asks for help overview
 
-Analyze the user's message and extract any relevant parameters:
-- cv_text: If user provides their CV
-- target_jd: Job description if provided
-- target_position: Target job role if mentioned
-- target_company: Company if mentioned
-
 Always respond in JSON format:
 {
   "intent": "CV_ANALYSIS|JOB_MATCH|SKILL_GAP|CV_GENERATOR|INTERVIEW|GREETING",
   "confidence": 0.0-1.0,
-  "parameters": {
-    "cv_text": "extracted CV text or null",
-    "target_jd": "JD text or null",
-    "target_position": "position or null",
-    "target_company": "company or null"
   }
 }"""
 
@@ -33,8 +22,6 @@ ORCHESTRATOR_USER = PromptTemplate(
     template="""Analyze this user message and determine intent:
 
 User message: {user_message}
-
-Extract any CV, job description, or other relevant information from the message.
 
 Respond in JSON format.""",
     input_variables=["user_message"],
@@ -56,14 +43,16 @@ When analyzing a CV:
 Always respond in JSON format with keys: score, strengths, improvements, recommendations"""
 
 CV_ANALYZER_USER = PromptTemplate(
-    template="""Analyze the following CV and provide feedback:
+    template="""Analyze the following CV based on user's request:
 
+CV:
 {cv_text}
 
-{target_jd_section}
+User's Request:
+{user_request}
 
 Provide your analysis in JSON format.""",
-    input_variables=["cv_text", "target_jd_section"],
+    input_variables=["cv_text", "user_request"],
 )
 
 # Job Matcher prompts

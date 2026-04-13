@@ -2,9 +2,8 @@ from typing import Literal
 from langchain_core.messages import HumanMessage, AIMessage
 from career_pilot.graph.state import AppState
 from career_pilot.agents.router import Router
+from career_pilot.agents.cv_analyzer import CVAnalyzer
 from career_pilot.prompts.prompt_templates import (
-    CV_ANALYZER_SYSTEM,
-    CV_ANALYZER_USER,
     JOB_MATCHER_SYSTEM,
     JOB_MATCHER_USER,
     SKILL_GAP_SYSTEM,
@@ -15,58 +14,89 @@ from career_pilot.prompts.prompt_templates import (
     INTERVIEW_USER,
 )
 from career_pilot.core.llm import CareerPilotLLM
+from career_pilot.tools.cv_parser import parse_resume
 
 router = Router()
+cv_analyzer = CVAnalyzer()
 llm = CareerPilotLLM(temperature=0.3)
 
 
 def router_node(state: AppState) -> dict:
+    """Router node - only detects intent, no extraction."""
     last_msg = state["messages"][-1].content
     result = router.route(last_msg)
-    return {"intent": result.intent, "context": result.parameters.model_dump()}
+    return {"intent": result.intent}
 
 
 def cv_analyzer_node(state: AppState) -> dict:
-    last_msg = state["messages"][-1].content
+    """Analyze CV with user request consideration."""
+    last_msg = state["messages"][-1].content  # User message
+    files = state.get("files", [])
+    user_request = last_msg  # Full user message as request
 
-    prompt = CV_ANALYZER_USER.format(cv_text=last_msg, target_jd_section="")
-    response = llm.invoke(CV_ANALYZER_SYSTEM + "\n\n" + prompt)
-    return {"response": response.content}
+    # Get CV content from files
+    cv_text = ""
+    for file in files:
+        cv_text += parse_resume(file) + "\n\n"
+
+    # If no files, check if user pasted CV in message (simple detection)
+    if not cv_text and len(last_msg) > 200:
+        # Assume user pasted their CV in the message
+        cv_text = last_msg
+        user_request = "Analyze my CV"
+
+    result = cv_analyzer.analyze_cv(cv_text=cv_text, user_request=user_request)
+    return {"response": result}
 
 
 def job_matcher_node(state: AppState) -> dict:
+    """TODO: Parse files from state when needed"""
     last_msg = state["messages"][-1].content
+    files = state.get("files", [])
+    # TODO: Parse files when available
     prompt = JOB_MATCHER_USER.format(cv_text=last_msg, target_role="", location="")
     response = llm.invoke(JOB_MATCHER_SYSTEM + "\n\n" + prompt)
     return {"response": response.content}
 
 
 def skill_gap_node(state: AppState) -> dict:
-    """Placeholder for skill gap node."""
+    """TODO: Parse files from state when needed"""
     last_msg = state["messages"][-1].content
-    prompt = SKILL_GAP_USER.format(cv_text=last_msg, target_role="")
+    files = state.get("files", [])
+    # TODO: Parse files when available
+    prompt = SKILL_GAP_USER.format(cv_text=last_msg, jd_text="")
     response = llm.invoke(SKILL_GAP_SYSTEM + "\n\n" + prompt)
     return {"response": response.content}
 
 
 def cv_generator_node(state: AppState) -> dict:
-    """Placeholder for CV generator node."""
+    """TODO: Parse files from state when needed"""
     last_msg = state["messages"][-1].content
+    files = state.get("files", [])
+    # TODO: Parse files when available
     prompt = CV_GENERATOR_USER.format(jd_text=last_msg, cv_text="", additional_info="")
     response = llm.invoke(CV_GENERATOR_SYSTEM + "\n\n" + prompt)
     return {"response": response.content}
 
 
 def interview_node(state: AppState) -> dict:
-    """Placeholder for interview node."""
+    """TODO: Parse files from state when needed"""
     last_msg = state["messages"][-1].content
+    files = state.get("files", [])
+    # TODO: Parse files when available
     prompt = INTERVIEW_USER.format(position=last_msg, company="", cv_text="")
     response = llm.invoke(INTERVIEW_SYSTEM + "\n\n" + prompt)
     return {"response": response.content}
 
 
 def greeting_node(state: AppState) -> dict:
-    """Greeting node - responds to general queries."""
+    """TODO: Check if files exist in state and ask for clarification
+
+    Example:
+        files = state.get("files", [])
+        if files:
+            return "👋 Hello! I see you uploaded a file. What would you like me to do with it?"
+    """
     greeting = (
         "👋 Hello! I'm Career Pilot, your AI career assistant. I can help you with:\n\n"
     )

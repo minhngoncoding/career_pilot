@@ -12,29 +12,10 @@ SUPPORTED_INTENTS = [
 ]
 
 
-class IntentParameters(BaseModel):
-    cv_text: Optional[str] = Field(
-        default=None, description="Extracted CV text from user message"
-    )
-    target_jd: Optional[str] = Field(
-        default=None, description="Job description if provided by user"
-    )
-    target_position: Optional[str] = Field(
-        default=None, description="Target job role if mentioned"
-    )
-    target_company: Optional[str] = Field(
-        default=None, description="Target company if mentioned"
-    )
-
-
 class IntentDetection(BaseModel):
     intent: str = Field(..., description="Detected user intent")
     confidence: float = Field(
         ..., ge=0.0, le=1.0, description="Confidence score from 0.0 to 1.0"
-    )
-    parameters: IntentParameters = Field(
-        default_factory=IntentParameters,
-        description="Extracted parameters from user message",
     )
 
     @field_validator("intent")

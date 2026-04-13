@@ -1,10 +1,6 @@
 from career_pilot.core.llm import CareerPilotLLM
 from career_pilot.prompts import ORCHESTRATOR_SYSTEM, ORCHESTRATOR_USER
-from career_pilot.agents.models import (
-    IntentDetection,
-    IntentParameters,
-    SUPPORTED_INTENTS,
-)
+from career_pilot.agents.models import IntentDetection
 
 
 class Router:
@@ -27,32 +23,21 @@ class Router:
     def _fallback_detect(self, user_message: str) -> IntentDetection:
         """Fallback keyword-based intent detection."""
         msg_lower = user_message.lower()
-        params = IntentParameters()
 
         if any(kw in msg_lower for kw in ["analyze", "check", "score", "cv", "resume"]):
-            return IntentDetection(
-                intent="CV_ANALYSIS", confidence=0.8, parameters=params
-            )
+            return IntentDetection(intent="CV_ANALYSIS", confidence=0.8)
         if any(kw in msg_lower for kw in ["find job", "job", "match"]):
-            return IntentDetection(
-                intent="JOB_MATCH", confidence=0.8, parameters=params
-            )
+            return IntentDetection(intent="JOB_MATCH", confidence=0.8)
         if any(kw in msg_lower for kw in ["skill", "gap", "learn"]):
-            return IntentDetection(
-                intent="SKILL_GAP", confidence=0.8, parameters=params
-            )
+            return IntentDetection(intent="SKILL_GAP", confidence=0.8)
         if any(kw in msg_lower for kw in ["generate", "create", "viết", "tạo"]):
-            return IntentDetection(
-                intent="CV_GENERATOR", confidence=0.8, parameters=params
-            )
+            return IntentDetection(intent="CV_GENERATOR", confidence=0.8)
         if any(kw in msg_lower for kw in ["interview", "mock", "practice"]):
-            return IntentDetection(
-                intent="INTERVIEW", confidence=0.8, parameters=params
-            )
+            return IntentDetection(intent="INTERVIEW", confidence=0.8)
         if any(kw in msg_lower for kw in ["hello", "hi", "help"]):
-            return IntentDetection(intent="GREETING", confidence=0.9, parameters=params)
+            return IntentDetection(intent="GREETING", confidence=0.9)
 
-        return IntentDetection(intent="GREETING", confidence=0.5, parameters=params)
+        return IntentDetection(intent="GREETING", confidence=0.5)
 
     def route(self, user_message: str) -> IntentDetection:
         """Route user to appropriate agent."""

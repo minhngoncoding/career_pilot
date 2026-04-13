@@ -13,7 +13,6 @@ from career_pilot.graph.nodes import (
 from career_pilot.graph.edges import route_by_intent
 from langsmith import traceable
 from langchain_core.messages import HumanMessage
-from career_pilot.tools.cv_parser import parse_resume
 
 
 def create_graph() -> StateGraph:
@@ -57,27 +56,9 @@ graph = create_graph().compile()
 
 
 @traceable
-def run_graph(user_message: str, files: list = None) -> str:
+def run_graph(user_message: str, files: list = []) -> str:
     """Run the graph with a user message and optional files."""
-
-    if files:
-        cv_text = parse_cv_files(files)
-        user_message = f"[CV Content:]\n{cv_text}\n\n[User Message:]\n{user_message}"
-
-    result = graph.invoke({"messages": [HumanMessage(content=user_message)]})
+    result = graph.invoke(
+        {"messages": [HumanMessage(content=user_message)], "files": files}
+    )
     return result.get("response", "No response")
-
-
-def parse_cv_files(files: list) -> str:
-    """Parse CV files (PDF, DOCX, TXT)."""
-
-    all_text = []
-
-    for file_path in files:
-        try:
-            text = parse_resume(file_path)
-            all_text.append(text)
-        except Exception as e:
-            all_text.append(f"[Error parsing {file_path}: {str(e)}]")
-
-    return "\n\n".join(all_text)
