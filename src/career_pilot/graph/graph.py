@@ -13,6 +13,7 @@ from career_pilot.graph.nodes import (
 from career_pilot.graph.edges import route_by_intent
 from langsmith import traceable
 from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
 
 
 def create_graph() -> StateGraph:
@@ -52,13 +53,16 @@ def create_graph() -> StateGraph:
     return graph
 
 
-graph = create_graph().compile()
+checkpointer = MemorySaver()
+graph = create_graph().compile(checkpointer=checkpointer)
 
 
 @traceable
-def run_graph(user_message: str, files: list = []) -> str:
+def run_graph(user_message: str, files: list = [], thread_id: str = "default") -> str:
     """Run the graph with a user message and optional files."""
+    config = {"configurable": {"thread_id": thread_id}}
     result = graph.invoke(
-        {"messages": [HumanMessage(content=user_message)], "files": files}
+        {"messages": [HumanMessage(content=user_message)], "files": files or []},
+        config=config,
     )
     return result.get("response", "No response")

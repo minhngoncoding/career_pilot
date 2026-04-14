@@ -1,9 +1,17 @@
 import gradio as gr
 from career_pilot.graph import run_graph
+import uuid
 
 
-def chat(message, history):
+# Global state to track thread_id per session
+session_threads = {}
+
+
+def chat(message, history, thread_id_state: gr.State):
     """Handle chat messages with LangGraph."""
+    # Get or create thread_id from state
+    thread_id = thread_id_state if thread_id_state else str(uuid.uuid4())
+
     # MultimodalTextbox returns dict: {'text': '...', 'files': [...]}
     if isinstance(message, dict):
         text = message.get("text", "") or ""
@@ -13,12 +21,12 @@ def chat(message, history):
         files = []
 
     if not text and not files:
-        return "", history
+        return "", history, thread_id_state
 
-    response = run_graph(text, files=files)
+    response = run_graph(text, files=files, thread_id=thread_id)
     history.append({"role": "user", "content": text})
     history.append({"role": "assistant", "content": response})
-    return "", history
+    return "", history, thread_id
 
 
 def welcome():
@@ -33,6 +41,9 @@ I can help you with: CV analysis, job matching, skill gaps, CV generation, and m
 # Build Gradio interface
 with gr.Blocks(title="Career Pilot") as demo:
     gr.Markdown(welcome())
+
+    # Hidden state to store thread_id per session
+    thread_id_state = gr.State(value=None)
 
     with gr.Row():
         with gr.Column(scale=3):
@@ -71,13 +82,17 @@ with gr.Blocks(title="Career Pilot") as demo:
             """)
 
     # Event handlers
-    submit_btn.click(chat, inputs=[msg, chatbot], outputs=[msg, chatbot])
+    submit_btn.click(
+        chat,
+        inputs=[msg, chatbot, thread_id_state],
+        outputs=[msg, chatbot, thread_id_state],
+    )
     msg.submit(
         chat,
-        inputs=[msg, chatbot],
-        outputs=[msg, chatbot],
+        inputs=[msg, chatbot, thread_id_state],
+        outputs=[msg, chatbot, thread_id_state],
     )
-    clear_btn.click(lambda: (None, []), outputs=[msg, chatbot])
+    clear_btn.click(lambda: (None, [], None), outputs=[msg, chatbot, thread_id_state])
 
 
 if __name__ == "__main__":

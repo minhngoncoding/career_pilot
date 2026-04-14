@@ -46,7 +46,15 @@ def cv_analyzer_node(state: AppState) -> dict:
         user_request = "Analyze my CV"
 
     result = cv_analyzer.analyze_cv(cv_text=cv_text, user_request=user_request)
-    return {"response": result}
+
+    # Store CV context for memory
+    cv_context = {
+        "cv_text": cv_text,
+        "user_request": user_request,
+        "analysis": result,
+    }
+
+    return {"response": result, "cv_context": cv_context}
 
 
 def job_matcher_node(state: AppState) -> dict:
