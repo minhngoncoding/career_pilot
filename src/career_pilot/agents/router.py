@@ -1,3 +1,4 @@
+import re
 from career_pilot.core.llm import CareerPilotLLM
 from career_pilot.prompts import ORCHESTRATOR_SYSTEM, ORCHESTRATOR_USER
 from career_pilot.agents.models import IntentDetection
@@ -42,6 +43,18 @@ class Router:
     def route(self, user_message: str) -> IntentDetection:
         """Route user to appropriate agent."""
         return self.detect_intent(user_message)
+
+
+def extract_url(text: str) -> str | None:
+    """Extract URL from user message."""
+    url_pattern = r"https?://[^\s)]+"
+    match = re.search(url_pattern, text)
+    return match.group(0) if match else None
+
+
+def has_url(text: str) -> bool:
+    """Check if text contains a URL."""
+    return extract_url(text) is not None
 
 
 def get_router() -> Router:
