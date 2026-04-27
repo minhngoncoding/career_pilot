@@ -142,3 +142,105 @@ Description: {job.description}
 
 def get_scraper() -> JobScraper:
     return JobScraper()
+
+
+class TopCVScraper:
+    """TopCV-specific job scraper using Playwright."""
+
+    def __init__(self, rate_limit_delay: float = 1.5):
+        self.rate_limit_delay = rate_limit_delay
+
+    async def _get_page_content(self, url: str) -> Optional[str]:
+        """Get page content using Playwright."""
+        try:
+            from playwright.async_api import async_playwright
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+                await page.goto(url, timeout=15000)
+                await page.wait_for_load_state("networkidle", timeout=10000)
+                content = await page.content()
+                await browser.close()
+                return content
+        except Exception as e:
+            logger.error(f"Failed to fetch {url}: {e}")
+            return None
+
+    def scrape_jd(self, url: str) -> Optional[JobPosting]:
+        """Scrape a single TopCV job description."""
+        import asyncio
+        content = asyncio.run(self._get_page_content(url))
+        
+        if not content:
+            return None
+
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(content, "lxml")
+        
+        return self._extract_jd(soup, url)
+
+    def _extract_jd(self, soup, url: str) -> Optional[JobPosting]:
+        """Extract job posting data from TopCV HTML."""
+        
+        # TopCV-specific selectors
+        title_sel = ["h1.title", "h1.job-title", ".job-header h1"]
+        company_sel = [".company-name", ".company-info h3", ".company-title"]
+        location_sel = [".location", ".address", ".job-location"]
+        salary_sel = [".salary", ".salary-range", ".salary-value"]
+        desc_sel = [".job-description", ".detail-content", ".description", "#job-description"]
+
+        def find_element(selectors):
+            for sel in selectors:
+                el = soup.select_one(sel)
+                if el:
+                    return el.get_text(strip=True)
+            return ""
+
+        def find_all_text(selectors):
+            for sel in selectors:
+                el = soup.select_one(sel)
+                if el:
+                    return el.get_text(strip=True)
+            return ""
+
+        title = find_element(title_sel)
+        company = find_element(company_sel)
+        location = find_element(location_sel)
+        salary = find_element(salary_sel)
+        description = find_element(desc_sel)
+
+        if not title and not description:
+            logger.warning(f"No content extracted from {url}")
+            return None
+
+        return JobPosting(
+            job_title=title or "Unknown",
+            company=company or "Unknown",
+            location=location or "N/A",
+            salary=salary or "Negotiable",
+            description=description or "",
+            source_url=url,
+        )
+
+    def to_vector_format(self, job: JobPosting) -> tuple:
+        """Convert JobPosting to vector store format."""
+        text = f"""
+Job Title: {job.job_title}
+Company: {job.company}
+Location: {job.location}
+Salary: {job.salary}
+Description: {job.description}
+"""
+        metadata = {
+            "job_title": job.job_title,
+            "company": job.company,
+            "location": job.location,
+            "salary": job.salary,
+            "source_url": job.source_url,
+            "source": "topcv",
+        }
+        return text, metadata
+
+
+def get_topcv_scraper() -> TopCVScraper:
+    return TopCVScraper()
