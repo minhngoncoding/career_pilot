@@ -5,8 +5,6 @@ from career_pilot.agents.router import Router
 from career_pilot.agents.cv_analyzer import CVAnalyzer
 from career_pilot.agents.job_matcher import JobMatcher
 from career_pilot.prompts.prompt_templates import (
-    JOB_MATCHER_SYSTEM,
-    JOB_MATCHER_USER,
     SKILL_GAP_SYSTEM,
     SKILL_GAP_USER,
     CV_GENERATOR_SYSTEM,
@@ -27,6 +25,7 @@ def router_node(state: AppState) -> dict:
     """Router node - only detects intent, no extraction."""
     last_msg = state["messages"][-1].content
     result = router.route(last_msg)
+    print(result)
     return {"intent": result.intent}
 
 
@@ -148,7 +147,9 @@ def greeting_node(state: AppState) -> dict:
     )
     greeting += "• CV Analysis - Analyze and improve your resume\n"
     greeting += "• Job Matching - Find suitable jobs based on your profile\n"
-    greeting += "• Skill Gap - Identify skills you need to develop\n"
+    greeting += (
+        "• Skill Gap - Identify skills you need to develop for your targeted JD\n"
+    )
     greeting += "• CV Generation - Create a professional CV\n"
     greeting += "• Interview Prep - Practice for job interviews\n\n"
     greeting += "How can I help you today?"

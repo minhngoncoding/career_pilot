@@ -42,12 +42,12 @@ def create_graph() -> StateGraph:
             "greeting_node": "greeting_node",
         },
     )
-    graph.add_edge("cv_analyzer_node", "router")
-    graph.add_edge("job_matcher_node", "router")
-    graph.add_edge("skill_gap_node", "router")
-    graph.add_edge("cv_generator_node", "router")
-    graph.add_edge("interview_node", "router")
-    graph.add_edge("greeting_node", "router")
+    graph.add_edge("cv_analyzer_node", "end_node")
+    graph.add_edge("job_matcher_node", "end_node")
+    graph.add_edge("skill_gap_node", "end_node")
+    graph.add_edge("cv_generator_node", "end_node")
+    graph.add_edge("interview_node", "end_node")
+    graph.add_edge("greeting_node", "end_node")
     graph.add_edge("end_node", END)
 
     return graph
